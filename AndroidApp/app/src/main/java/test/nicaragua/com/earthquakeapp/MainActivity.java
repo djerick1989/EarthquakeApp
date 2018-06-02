@@ -1,5 +1,7 @@
 package test.nicaragua.com.earthquakeapp;
 
+import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -9,14 +11,29 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import test.nicaragua.com.earthquakeapp.database.EventRepository;
+import test.nicaragua.com.earthquakeapp.model.Event;
+
 public class MainActivity extends AppCompatActivity {
 
+    List<Event> eventList;
+    Context mContext;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        eventList = new ArrayList<>();
+        mContext = getBaseContext();
+
+        final DownloadTask downloadTask = new DownloadTask();
+        downloadTask.execute("");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -48,5 +65,36 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private class DownloadTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... url) {
+            String data = "";
+            try {
+                Calendar yesterday = Calendar.getInstance();
+                yesterday.add(Calendar.DAY_OF_MONTH, -1);
+                Calendar today = Calendar.getInstance();
+                Date starttime = yesterday.getTime();
+                Date endtime = today.getTime();
+                eventList = EventRepository.consumeWS(mContext, starttime, endtime );
+                data = "1";
+            } catch (Exception e) {
+                e.printStackTrace();
+                data = "-1";
+            }
+            return data;
+        }
+
+        // Una vez finalizada la descarga de datos
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            if (result.equals("1")) {
+                // TODO: Load elements in RecyclerView
+            } else {
+                // TODO: Alert dialog
+            }
+        }
     }
 }

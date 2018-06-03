@@ -3,11 +3,12 @@ package test.nicaragua.com.earthquakeapp;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -22,6 +23,8 @@ import test.nicaragua.com.earthquakeapp.model.Event;
 public class MainActivity extends AppCompatActivity {
 
     List<Event> eventList;
+    ViewPager viewPager;
+    SlidePagerAdapter slidePagerAdapter;
     Context mContext;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,20 +32,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        viewPager.setOffscreenPageLimit(2);
+
+        slidePagerAdapter = new SlidePagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(slidePagerAdapter);
+
         eventList = new ArrayList<>();
         mContext = getBaseContext();
 
         final DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute("");
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
     }
 
     @Override
@@ -95,6 +97,36 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 // TODO: Alert dialog
             }
+        }
+    }
+
+    public class SlidePagerAdapter extends FragmentStatePagerAdapter {
+
+        public SlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public android.support.v4.app.Fragment getItem(int arg0) {
+            Bundle bundle = new Bundle();
+            Fragment fragment;
+            if(arg0 == 1) {
+                fragment = EventFragment.newInstance();
+            } else {
+                // TODO: Cargar fragment del mapa
+                fragment = EventFragment.newInstance();
+            }
+            return fragment;
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public int getItemPosition(Object object) {
+            return POSITION_NONE;
         }
     }
 }

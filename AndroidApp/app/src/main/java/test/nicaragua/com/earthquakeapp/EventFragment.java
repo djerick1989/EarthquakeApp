@@ -25,7 +25,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import test.nicaragua.com.earthquakeapp.database.EventRepository;
@@ -148,7 +147,7 @@ public class EventFragment extends Fragment {
         protected String doInBackground(String... url) {
             String data = "";
             try {
-                eventList = EventRepository.consumeWS(mContext, mStarttime.getTime(), mEndtime.getTime() );
+                eventList = EventRepository.consumeWS(mContext, mStarttime.getTime(), mEndtime.getTime());
                 data = "1";
             } catch (Exception e) {
                 e.printStackTrace();
@@ -162,6 +161,9 @@ public class EventFragment extends Fragment {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if (result.equals("1")) {
+                if (eventList.size() == 0) {
+                    eventList = EventRepository.getAll(mContext);
+                }
                 mAdapter = new EventAdapter(eventList);
                 RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
                 mRecyclerView.setLayoutManager(mLayoutManager);

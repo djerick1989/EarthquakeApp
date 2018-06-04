@@ -47,11 +47,10 @@ public class MainActivity extends AppCompatActivity {
         public android.support.v4.app.Fragment getItem(int arg0) {
             Bundle bundle = new Bundle();
             Fragment fragment;
-            if(arg0 == 1) {
+            if(arg0 == 0) {
                 fragment = EventFragment.newInstance();
             } else {
-                // TODO: Cargar fragment del mapa
-                fragment = EventFragment.newInstance();
+                fragment = MapFragment.newInstance();
             }
             return fragment;
         }

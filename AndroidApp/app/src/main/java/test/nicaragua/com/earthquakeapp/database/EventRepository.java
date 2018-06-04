@@ -2,6 +2,7 @@ package test.nicaragua.com.earthquakeapp.database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 
 import org.json.JSONArray;
@@ -63,6 +64,27 @@ public class EventRepository extends CommonRepository {
         }
     }
 
+    public static List<Event> getAll(Context contexto) {
+        String sql = "SELECT * FROM " + ConstantDB.TABLE.EVENT;
+        EventRepository rep = new EventRepository(contexto);
+        List<Event> eventList = new ArrayList<>();
+        try {
+            rep.open();
+            Cursor c = rep.mDb.rawQuery(sql, null);
+            if (c.moveToFirst()) {
+                do {
+                    eventList.add(cursorToEvent(c));
+                } while (c.moveToNext());
+            }
+            c.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            rep.close();
+        }
+        return eventList;
+    }
+
     public static List<Event> consumeWS(Context context, Date starttime, Date endtime) {
         List<Event> lstEvents = new ArrayList<>();
 
@@ -101,6 +123,18 @@ public class EventRepository extends CommonRepository {
             e.printStackTrace();
         }
         return lstEvents;
+    }
+
+    public static Event cursorToEvent(Cursor cursor) {
+        Event event = new Event();
+        event.setId(cursor.getString(cursor.getColumnIndex(ConstantDB.EVENT.ID)));
+        event.setMagnitude(cursor.getDouble(cursor.getColumnIndex(ConstantDB.EVENT.MAGNITUDE)));
+        event.setTime(cursor.getLong(cursor.getColumnIndex(ConstantDB.EVENT.TIME)));
+        event.setDirection(cursor.getString(cursor.getColumnIndex(ConstantDB.EVENT.DIRECTION)));
+        event.setType(cursor.getString(cursor.getColumnIndex(ConstantDB.EVENT.TYPE)));
+        event.setLatitude(cursor.getDouble(cursor.getColumnIndex(ConstantDB.EVENT.LATITUDE)));
+        event.setLongitude(cursor.getDouble(cursor.getColumnIndex(ConstantDB.EVENT.LONGITUDE)));
+        return event;
     }
 
 }

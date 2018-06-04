@@ -1,6 +1,7 @@
 package test.nicaragua.com.earthquakeapp;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -53,6 +54,15 @@ public class MainActivity extends AppCompatActivity {
                 fragment = EventFragment.newInstance();
             }
             return fragment;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            if(position == 0) {
+                return getResources().getString(R.string.str_event);
+            } else {
+                return getResources().getString(R.string.str_map);
+            }
         }
 
         @Override

@@ -4,13 +4,22 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -34,6 +43,9 @@ public class EventFragment extends Fragment {
     Context mContext;
     static Calendar mStarttime, mEndtime;
     DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
 
     public EventFragment() {
         // Required empty public constructor
@@ -44,7 +56,6 @@ public class EventFragment extends Fragment {
      * this fragment using the provided parameters.
      * @return A new instance of fragment EventFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static EventFragment newInstance() {
         EventFragment fragment = new EventFragment();
         return fragment;
@@ -104,6 +115,18 @@ public class EventFragment extends Fragment {
             }
         });
 
+        final ImageButton bt_search = (ImageButton) view.findViewById(R.id.bt_search);
+        bt_search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final DownloadTask downloadTask = new DownloadTask();
+                downloadTask.execute("");
+            }
+        });
+
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+
         final DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute("");
 
@@ -139,9 +162,86 @@ public class EventFragment extends Fragment {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if (result.equals("1")) {
-                // TODO: Load elements in RecyclerView
+                mAdapter = new EventAdapter(eventList);
+                RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
+                mRecyclerView.setLayoutManager(mLayoutManager);
+                mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+                mRecyclerView.setAdapter(mAdapter);
             } else {
                 // TODO: Alert dialog
+            }
+        }
+    }
+
+    public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder> {
+
+        private List<Event> eventList;
+        private int lastPosition = -1;
+
+        public class MyViewHolder extends RecyclerView.ViewHolder {
+            public TextView magnitude, time, place;
+            public ImageView indicator;
+
+            public MyViewHolder(View view) {
+                super(view);
+                magnitude = (TextView) view.findViewById(R.id.magnitude);
+                time = (TextView) view.findViewById(R.id.time);
+                place = (TextView) view.findViewById(R.id.place);
+                indicator = (ImageView) view.findViewById(R.id.indicator);
+            }
+        }
+
+
+        public EventAdapter(List<Event> eventList) {
+            this.eventList = eventList;
+        }
+
+        @Override
+        public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.event_list_row, parent, false);
+
+            return new MyViewHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(MyViewHolder holder, int position) {
+            Event event = eventList.get(position);
+            holder.magnitude.setText(event.getMagnitude().toString());
+            Calendar time = Calendar.getInstance();
+            time.setTimeInMillis(event.getTime());
+            DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+            holder.time.setText(df.format(time.getTime()));
+            holder.place.setText(event.getDirection());
+            if (event.getMagnitude() < 3 ) {
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                    holder.indicator.setImageDrawable(getActivity().getDrawable(R.mipmap.green_circle));
+                } else{
+                    holder.indicator.setImageDrawable(getActivity().getResources().getDrawable(R.mipmap.green_circle));
+                }
+            } else {
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                    holder.indicator.setImageDrawable(getActivity().getDrawable(R.mipmap.red_circle));
+                } else{
+                    holder.indicator.setImageDrawable(getActivity().getResources().getDrawable(R.mipmap.red_circle));
+                }
+            }
+            setAnimation(holder.itemView, position);
+        }
+
+        @Override
+        public int getItemCount() {
+            return eventList.size();
+        }
+
+        private void setAnimation(View viewToAnimate, int position)
+        {
+            // If the bound view wasn't previously displayed on screen, it's animated
+            if (position > lastPosition)
+            {
+                Animation animation = AnimationUtils.loadAnimation(getContext(), android.R.anim.slide_in_left);
+                viewToAnimate.startAnimation(animation);
+                lastPosition = position;
             }
         }
     }

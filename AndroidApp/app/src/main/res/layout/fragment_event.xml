@@ -26,7 +26,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="@string/str_endtime"
-            android:layout_marginLeft="15dp"
+            android:layout_marginLeft="5dp"
             />
 
         <Button
@@ -35,9 +35,11 @@
             android:layout_height="wrap_content" />
 
         <ImageButton
+            android:id="@+id/bt_search"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
+            android:layout_marginLeft="5dp"
             android:src="@drawable/ic_search_black_24dp"
             android:scaleType="fitXY"
             android:drawingCacheQuality="high" />

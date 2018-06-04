@@ -2,4 +2,7 @@
     <string name="app_name">EarthquakeApp</string>
     <string name="str_starttime">Start</string>
     <string name="str_endtime">End</string>
+    <string name="str_event">Events</string>
+    <string name="str_map">Map</string>
+    <string name="str_magnitude">Magnitude</string>
 </resources>

@@ -28,7 +28,7 @@ import test.nicaragua.com.earthquakeapp.model.Event;
 public class MapFragment extends Fragment {
 
     MapView mMapView;
-    private GoogleMap googleMap;
+    private static GoogleMap googleMap;
     Context mContext;
     List<Event> eventList;
 
@@ -91,6 +91,23 @@ public class MapFragment extends Fragment {
         eventList = EventRepository.getAll(mContext);
     }
 
+    public void zoomMap(Event event, Context context) {
+
+        LatLng latLnglocal = new LatLng(event.getLatitude(), event.getLongitude());
+        if (event.getMagnitude() < 3) {
+            Marker marker = googleMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.mipmap.green_circle)).position(latLnglocal).
+                    title(event.getMagnitude().toString()+ " " + context.getResources().getString(R.string.str_magnitude)).snippet(event.getDirection()));
+            marker.showInfoWindow();
+        } else {
+            Marker marker = googleMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.mipmap.red_circle)).position(latLnglocal).
+                    title(event.getMagnitude().toString() + " " + context.getResources().getString(R.string.str_magnitude)).snippet(event.getDirection()));
+            marker.showInfoWindow();
+        }
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(latLnglocal).zoom(11).build();
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition
+                (cameraPosition));
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -128,11 +145,10 @@ public class MapFragment extends Fragment {
                             }
                         }
                     }
-
                     // For zooming automatically to the location of the marker
                     CameraPosition cameraPosition = new CameraPosition.Builder().zoom(16).build();
                     googleMap.animateCamera(CameraUpdateFactory.newCameraPosition
-                            (cameraPosition ));
+                            (cameraPosition));
                 } catch (Exception e){
                     e.printStackTrace();
                 }

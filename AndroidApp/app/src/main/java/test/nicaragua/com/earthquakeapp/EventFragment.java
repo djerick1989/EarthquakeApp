@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -41,10 +42,11 @@ public class EventFragment extends Fragment {
     List<Event> eventList;
     Context mContext;
     static Calendar mStarttime, mEndtime;
+    SwipeRefreshLayout swipeRefreshLayout;
     DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    private OnEventInteraction mListener;
 
     public EventFragment() {
         // Required empty public constructor
@@ -118,7 +120,8 @@ public class EventFragment extends Fragment {
         bt_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final DownloadTask downloadTask = new DownloadTask();
+                swipeRefreshLayout.setRefreshing(true);
+                DownloadTask downloadTask = new DownloadTask();
                 downloadTask.execute("");
             }
         });
@@ -126,7 +129,18 @@ public class EventFragment extends Fragment {
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
 
-        final DownloadTask downloadTask = new DownloadTask();
+        loadData();
+        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
+        swipeRefreshLayout.setOnRefreshListener(
+            new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    DownloadTask downloadTask = new DownloadTask();
+                    downloadTask.execute("");
+                }
+            });
+        swipeRefreshLayout.setRefreshing(true);
+        DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute("");
 
         return view;
@@ -135,11 +149,15 @@ public class EventFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        if (context instanceof OnEventInteraction) {
+            mListener = (OnEventInteraction) context;
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        mListener = null;
     }
 
     private class DownloadTask extends AsyncTask<String, Void, String> {
@@ -160,19 +178,24 @@ public class EventFragment extends Fragment {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
+            swipeRefreshLayout.setRefreshing(false);
             if (result.equals("1")) {
-                if (eventList.size() == 0) {
-                    eventList = EventRepository.getAll(mContext);
-                }
-                mAdapter = new EventAdapter(eventList);
-                RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
-                mRecyclerView.setLayoutManager(mLayoutManager);
-                mRecyclerView.setItemAnimator(new DefaultItemAnimator());
-                mRecyclerView.setAdapter(mAdapter);
+                loadData();
             } else {
                 // TODO: Alert dialog
             }
         }
+    }
+
+    public void loadData() {
+        if (eventList.size() == 0) {
+            eventList = EventRepository.getAll(mContext);
+        }
+        mAdapter = new EventAdapter(eventList);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder> {
@@ -208,7 +231,7 @@ public class EventFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
-            Event event = eventList.get(position);
+            final Event event = eventList.get(position);
             holder.magnitude.setText(event.getMagnitude().toString());
             Calendar time = Calendar.getInstance();
             time.setTimeInMillis(event.getTime());
@@ -228,6 +251,12 @@ public class EventFragment extends Fragment {
                     holder.indicator.setImageDrawable(getActivity().getResources().getDrawable(R.mipmap.red_circle));
                 }
             }
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onEventClick(event);
+                }
+            });
             setAnimation(holder.itemView, position);
         }
 
@@ -244,6 +273,16 @@ public class EventFragment extends Fragment {
                 Animation animation = AnimationUtils.loadAnimation(getContext(), android.R.anim.slide_in_left);
                 viewToAnimate.startAnimation(animation);
                 lastPosition = position;
+            }
+        }
+    }
+
+    private void onEventClick(Event event) {
+        if (mListener != null) {
+            try {
+                mListener.setEvent(event);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

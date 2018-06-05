@@ -14,7 +14,9 @@ import android.view.MenuItem;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+import test.nicaragua.com.earthquakeapp.model.Event;
+
+public class MainActivity extends AppCompatActivity implements OnEventInteraction {
 
 
     ViewPager viewPager;
@@ -36,6 +38,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void setEvent(Event event) {
+        viewPager.setCurrentItem(1);
+        ((MapFragment) slidePagerAdapter.getItem(1)).zoomMap(event, getApplicationContext());
+    }
 
     public class SlidePagerAdapter extends FragmentStatePagerAdapter {
 
